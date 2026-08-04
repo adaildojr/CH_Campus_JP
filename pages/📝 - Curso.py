@@ -251,16 +251,54 @@ if not df_calculo.empty:
     
         st.dataframe(df_resumo_periodo, hide_index=True, width='stretch')
 
-
-        
     st.markdown("<br>", unsafe_allow_html=True)
-    
-   
 
+# NOVO CÓDIGO: TABELA DE RESUMO POR PROFESSOR
+    # =========================================================================
+    st.markdown("---")
+    st.subheader("Detalhamento por Docente")
     
+    # 1. Agrupar os dados do curso selecionado (df_calculo)
+    df_prof_curso = df_calculo.groupby(['Professor', 'Lotação']).agg(
+        Disciplinas=('Componente Curricular', lambda x: ', '.join(x.unique())),
+        CH_Curso=('Quantidade de Aulas Semanal', 'sum')
+    ).reset_index()
+
+    # 2. Calcular a Carga Horária TOTAL no semestre para os professores 
+    # Usamos o df_completo pois ele não tem o filtro de Modalidade/Curso/Turno aplicado
+    df_ch_total = df_completo.groupby('Professor')['Quantidade de Aulas Semanal'].sum().reset_index()
+    df_ch_total = df_ch_total.rename(columns={'Quantidade de Aulas Semanal': 'CH_Total_Semestre'})
+
+    # 3. Cruzar as informações (Left join para manter apenas os professores do curso atual)
+    df_resumo_prof = pd.merge(df_prof_curso, df_ch_total, on='Professor', how='left')
+
+    # 4. Renomear e formatar as colunas
+    df_resumo_prof = df_resumo_prof.rename(columns={
+        'Professor': 'Docente',
+        'Disciplinas': 'Disciplinas no Curso',
+        'CH_Curso': 'C.H. no Curso',
+        'CH_Total_Semestre': 'C.H. Total (Semestre)'
+    })
+    
+    # Arredondar os valores numéricos para 1 casa decimal
+    df_resumo_prof['C.H. no Curso'] = df_resumo_prof['C.H. no Curso'].round(1)
+    df_resumo_prof['C.H. Total (Semestre)'] = df_resumo_prof['C.H. Total (Semestre)'].round(1)
+    
+    # Ordenar alfabeticamente pelo nome do professor
+    df_resumo_prof = df_resumo_prof.sort_values(by='Docente')
+
+    # 5. Exibir a tabela na tela
+    st.dataframe(df_resumo_prof, hide_index=True, width='stretch')
+
+
+
+
 
 else:
     st.warning("Nenhuma disciplina encontrada ou selecionada para os filtros atuais.")
+
+
+
 
 # Informar data dos dados atualizados
 try:
@@ -284,3 +322,5 @@ except FileNotFoundError:
 
 st.sidebar.markdown("---") # Cria uma linha divisória para separar o conteúdo principal do rodapé
 st.sidebar.caption(mensagem) # Coloca a mensagem com uma fonte menor (caption) na parte de ba
+
+
