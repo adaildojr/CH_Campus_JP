@@ -3,6 +3,19 @@ import pandas as pd
 import os
 from datetime import datetime
 
+# 1. Configuração da página (deve ser o primeiro comando)
+st.set_page_config(page_title="Outra Página", page_icon="📈", layout="wide")
+
+# 2. VERIFICAÇÃO DE SEGURANÇA (Bloqueio)
+if "autenticado" not in st.session_state or not st.session_state["autenticado"]:
+    st.warning("🔒 Acesso negado. Por favor, faça o login na página Home.")
+    # Interrompe a execução do restante do código nesta página
+    #st.stop() 
+    
+    # Alternativa: se quiser forçar o usuário a voltar para a página inicial automaticamente, 
+    # comente o st.stop() acima e descomente a linha abaixo (use o nome exato do seu arquivo principal):
+    st.switch_page("Home.py")
+
 st.set_page_config(
     page_title="Docente",
     page_icon="👨‍🏫",
