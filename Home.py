@@ -161,8 +161,8 @@ else:
     # ==========================================
     # 6. Construção da Interface Principal
     # ==========================================
-    st.title("📊 Lista Carga Horária Docente")
-    st.markdown("---")
+    st.title(f"Lista Carga Horária Docente ({ano_selecionado}.{periodo_selecionado})")
+    #st.markdown("---")
 
     if df_resultado.empty:
         st.warning("Nenhum dado encontrado para a combinação de filtros selecionada.")
@@ -170,43 +170,45 @@ else:
         # --- MÉTRICAS E TABELA GERAL ---
         media_carga = df_resultado['Quantidade de Aula Semanal Total'].mean()
         
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([3,1],gap="small", vertical_alignment="center", border=False, width="stretch")
         with col1:
-            st.metric(label="Média de Carga Horária", value=f"{media_carga:.2f} aulas", border=True)
-        with col2:
-            st.metric(label="Total de Professores", value=f"{len(df_resultado)}", border=True)
-            
-        st.markdown("### 📋 Listagem Geral de Professores")
-        
-        st.dataframe(
-            df_resultado,
-            use_container_width=True,
-            hide_index=True,
-            column_order=[
-                "Professor", 
-                "Campus do mapa", 
-                "Setor atual do docente", 
-                "Lotação", 
-                "Quantidade de Aula Semanal Total"
-            ],
-            column_config={
-                "Professor": st.column_config.TextColumn("Nome do Professor"),
-                "Campus do mapa": st.column_config.TextColumn("Campus"),
-                "Setor atual do docente": st.column_config.TextColumn("Setor"),
-                "Lotação": st.column_config.TextColumn("Lotação"),
-                "Quantidade de Aula Semanal Total": st.column_config.ProgressColumn(
+            #st.markdown("### 📋 Listagem Geral de Professores")
+              
+            st.dataframe(
+                df_resultado,
+                width='stretch',
+                hide_index=True,
+                column_order=[
+                    "Professor", 
+                    "Campus do mapa", 
+                    "Setor atual do docente", 
+                    "Lotação", 
+                    "Quantidade de Aula Semanal Total"
+                ],
+                column_config={
+                    "Professor": st.column_config.TextColumn("Nome do Professor"),
+                    "Campus do mapa": st.column_config.TextColumn("Campus"),
+                    "Setor atual do docente": st.column_config.TextColumn("Setor"),
+                    "Lotação": st.column_config.TextColumn("Lotação"),
+                    "Quantidade de Aula Semanal Total": st.column_config.ProgressColumn(
                     "Carga Semanal Total",
                     format="%.2f",
                     min_value=0,
                     max_value=20,
-                )
-            }
-        )
+                    )
+                }
+            )
+            
+        with col2:
+            st.metric(label="Média de Carga Horária", value=f"{media_carga:.2f} aulas", border=True)
+            st.metric(label="Total de Professores", value=f"{len(df_resultado)}", border=True)
+            
+       
 
         st.markdown("---")
         
         # 7. SEÇÃO: ANÁLISE DE OCIOSIDADE
-        st.markdown("### 🔍 Filtro Por Lotação")
+        st.markdown("## Filtro Por Lotação e Aula Semanal")
         
         # Identifica o valor mínimo e máximo de aulas para configurar o slider
         min_aulas = float(df_resultado['Quantidade de Aula Semanal Total'].min())
@@ -234,60 +236,65 @@ else:
         # Executa as regras matemáticas solicitadas para ociosidade
         df_ociosidade['Ociosidade (12h)'] = df_ociosidade['Quantidade de Aula Semanal Total'] - 12
         df_ociosidade['Ociosidade (20h)'] = df_ociosidade['Quantidade de Aula Semanal Total'] - 20
-        
-        # Exibe os resultados (Totais da filtragem)
-        col_oci1, col_oci2, col_oci3 = st.columns(3, gap="large", vertical_alignment="center")
-        with col_oci1:
+
+        col_dado1, col_dado2, col_dado3, col_dado4 = st.columns(4, gap="large", vertical_alignment="center", border=False, width="stretch")
+        with col_dado1:
             varicao_per = (((len(df_ociosidade))/len(df_resultado))*100) if len(df_resultado) > 0 else 0
             st.metric(f"**Total de Docentes Selecionado:**", f"{len(df_ociosidade)}", delta=f"{varicao_per:.2f}%", border=True)
-            
+        with col_dado2:
             media_ociosidade = df_ociosidade['Quantidade de Aula Semanal Total'].mean() if len(df_ociosidade) > 0 else 0
             varicao_per_media = media_ociosidade - 12
             st.metric("Média de Carga Horária (Docentes Filtrados)", f"{media_ociosidade:.2f} aulas", delta=f"{varicao_per_media:.2f} aulas", border=True)
-        with col_oci2:
+        with col_dado3:
             soma_12 = df_ociosidade['Ociosidade (12h)'].sum() if len(df_ociosidade) > 0 else 0
             media_12 = soma_12 / len(df_ociosidade) if len(df_ociosidade) > 0 else 0
             st.metric("Total Ociosidade (Base 12h)", f"{soma_12:.2f} aulas", delta=f"{media_12:.2f} aulas", border=True)
-            
+        with col_dado4:
             soma_20 = df_ociosidade['Ociosidade (20h)'].sum() if len(df_ociosidade) > 0 else 0
             media_20 = soma_20 / len(df_ociosidade) if len(df_ociosidade) > 0 else 0
             st.metric("Total Ociosidade (Base 20h)", f"{soma_20:.2f} aulas", delta=f"{media_20:.2f} aulas", border=True)
-        with col_oci3:
-            st.metric("Quantidade de Disciplinas com 2 horas semanais", f"{-soma_12/2:.2f} Disciplinas", border=True)
-            st.metric("Quantidade de Disciplinas com 4 horas semanais", f"{-soma_12/4:.2f} Disciplinas", border=True)
-            st.metric("Quantidade de Disciplinas com 6 horas semanais", f"{-soma_12/6:.2f} Disciplinas", border=True)
 
+        # Exibe os resultados (Totais da filtragem)
+        col_oci1, col_oci2 = st.columns([3,1], gap="large", vertical_alignment="bottom", border=False, width="stretch")
+        with col_oci1:
         # Exibe a tabela filtrada final com as novas colunas
-        st.markdown("#### Detalhamento da Ociosidade")
-        st.dataframe(
-            df_ociosidade,
-            use_container_width=True,
-            hide_index=True,
-            column_order=[
-                "Professor", 
-                "Campus do mapa", 
-                "Setor atual do docente", 
-                "Lotação", 
-                "Quantidade de Aula Semanal Total",
-                "Ociosidade (12h)",
-                "Ociosidade (20h)"
-            ],
-            column_config={
-                "Professor": st.column_config.TextColumn("Nome do Professor"),
-                "Campus do mapa": st.column_config.TextColumn("Campus"),
-                "Setor atual do docente": st.column_config.TextColumn("Setor"),
-                "Lotação": st.column_config.TextColumn("Lotação"),
-                "Quantidade de Aula Semanal Total": st.column_config.NumberColumn(
-                    "Carga Semanal Total", format="%.2f"
-                ),
-                "Ociosidade (12h)": st.column_config.NumberColumn(
-                    "Ociosidade (-12h)", format="%.2f"
-                ),
-                "Ociosidade (20h)": st.column_config.NumberColumn(
-                    "Ociosidade (-20h)", format="%.2f"
-                )
-            }
-        )
+            st.markdown("## Listagem Docente Filtrada")
+            st.dataframe(
+                df_ociosidade,
+                width='stretch',
+                hide_index=True,
+                column_order=[
+                    "Professor", 
+                    "Campus do mapa", 
+                    "Setor atual do docente", 
+                    "Lotação", 
+                    "Quantidade de Aula Semanal Total",
+                    "Ociosidade (12h)",
+                    "Ociosidade (20h)"
+                ],
+                column_config={
+                    "Professor": st.column_config.TextColumn("Nome do Professor"),
+                    "Campus do mapa": st.column_config.TextColumn("Campus"),
+                    "Setor atual do docente": st.column_config.TextColumn("Setor"),
+                    "Lotação": st.column_config.TextColumn("Lotação"),
+                    "Quantidade de Aula Semanal Total": st.column_config.NumberColumn(
+                        "Carga Semanal Total", format="%.2f"
+                    ),
+                    "Ociosidade (12h)": st.column_config.NumberColumn(
+                        "Ociosidade (-12h)", format="%.2f"
+                    ),
+                    "Ociosidade (20h)": st.column_config.NumberColumn(
+                        "Ociosidade (-20h)", format="%.2f"
+                    )
+                }
+            )
+
+        with col_oci2:
+            st.metric("Quantidade de Disciplinas com 2 Aulas semanais", f"{-soma_12/2:.2f} Disciplinas", border=True)
+            st.metric("Quantidade de Disciplinas com 4 Aulas semanais", f"{-soma_12/4:.2f} Disciplinas", border=True)
+            st.metric("Quantidade de Disciplinas com 6 Aulas semanais", f"{-soma_12/6:.2f} Disciplinas", border=True)
+
+
 
     # Informar data dos dados atualizados no rodapé
     try:
