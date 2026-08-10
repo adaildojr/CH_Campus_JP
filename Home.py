@@ -298,7 +298,7 @@ else:
 
     # Informar data dos dados atualizados no rodapé
     try:
-        timestamp_atualizacao = os.path.getmtime("Diarios_Organizados_Final.xlsx")
+        timestamp_atualizacao = os.path.getctime("Diarios_Organizados_Final.xlsx")
         data_obj = datetime.fromtimestamp(timestamp_atualizacao)
         data_formatada = data_obj.strftime("%d/%m/%Y às %H:%M")
         mensagem = f"📅 Arquivo atualizado em: {data_formatada}"

@@ -303,10 +303,10 @@ else:
 # Informar data dos dados atualizados
 try:
     # Obtém o timestamp da última modificação do arquivo
-    timestamp_atualizacao = os.path.getmtime("Diarios_Organizados_Final.xlsx")
+    #timestamp_atualizacao = os.path.getmtime("Diarios_Organizados_Final.xlsx")
     
     # Data de CRIAÇÃO do arquivo no Windows, use:
-    #timestamp_atualizacao = os.path.getctime("Diarios_Organizados_Final.xlsx")
+    timestamp_atualizacao = os.path.getctime("Diarios_Organizados_Final.xlsx")
     
     # Converte o timestamp para uma data legível
     data_obj = datetime.fromtimestamp(timestamp_atualizacao)
