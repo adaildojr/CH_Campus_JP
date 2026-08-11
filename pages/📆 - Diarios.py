@@ -37,9 +37,9 @@ def carregar_dados_diarios():
 
 df = carregar_dados_diarios()
 
-
+# ==========================================
 # BARRA LATERAL (SIDEBAR) - FILTROS GERAIS
-
+# ==========================================
 st.sidebar.title("Filtros Globais")
 
 # Filtro de Progressão Parcial
@@ -62,9 +62,9 @@ mascara_semestre = (df['Ano Letivo'] == ano_selecionado) & (
 )
 df_semestre = df[mascara_semestre].copy()
 
-
+# ==========================================
 # PÁGINA PRINCIPAL
-
+# ==========================================
 st.title(f"Diários - {ano_selecionado}.{periodo_selecionado}")
 st.markdown("---")
 
@@ -92,9 +92,9 @@ if curso_selecionado != "Todos":
 else:
     df_final = df_filtrado_mod
 
-
+# ==========================================
 # INDICADORES (KPIs)
-
+# ==========================================
 st.markdown("### 📊 Indicadores de Turmas")
 
 qtd_0_alunos = len(df_final[df_final['Quantidade de Alunos'] == 0])
@@ -109,40 +109,91 @@ kpi2.metric("Diários com 1 Aluno", qtd_1_aluno)
 kpi3.metric("Diários SEM Professor", qtd_sem_prof)
 kpi4.metric("Diários com > 1 Professor", qtd_mais_1_prof)
 
+
+# Define as colunas que serão utilizadas em TODAS as tabelas desta página
+colunas_exibir = [
+    'Modalidade', 
+    'Curso', 
+    'Componente Curricular', 
+    'Docentes', 
+    'Quantidade de Alunos', 
+    'Quantidade de Aulas Semanal'
+]
+colunas_presentes = [col for col in colunas_exibir if col in df_final.columns]
+
 # ==========================================
-# TABELA DE DADOS
+# TABELA 1: RELAÇÃO GERAL
 # ==========================================
-st.markdown("### 📋 Relação de Diários (Disciplinas)")
+st.markdown("### 📋 Relação Geral de Diários (Disciplinas)")
 
 if df_final.empty:
     st.info("Nenhum diário encontrado com os filtros selecionados.")
 else:
-    # Seleciona as colunas solicitadas para exibir (Adicionada 'Quantidade de Aulas Semanal')
-    colunas_exibir = [
-        'Modalidade', 
-        'Curso', 
-        'Componente Curricular', 
-        'Docentes', 
-        'Quantidade de Alunos', 
-        'Carga Horária (h)',
-        'Quantidade de Aulas Semanal'
-    ]
-    
-    # Verifica quais dessas colunas de fato existem no dataset para não quebrar
-    colunas_presentes = [col for col in colunas_exibir if col in df_final.columns]
-    
     df_tabela = df_final[colunas_presentes].copy()
     
     # Renomeia colunas para ficar mais amigável na tela
     df_tabela.rename(columns={
         'Docentes': 'Docente(s)',
-        'Carga Horária (h)': 'Carga Horária Total',
         'Quantidade de Aulas Semanal': 'Aulas Semanais'
     }, inplace=True)
     
     # Exibe a tabela interativa
     st.dataframe(
         df_tabela,
+        width='stretch',
+        hide_index=True,
+        column_config={
+            "Quantidade de Alunos": st.column_config.NumberColumn("Qtd Alunos", format="%d"),
+            "Aulas Semanais": st.column_config.NumberColumn("Aulas Semanais", format="%.2f")
+        }
+    )
+
+st.markdown("---")
+
+# ==========================================
+# TABELA 2: SEM PROFESSOR
+# ==========================================
+st.markdown("### ⚠️ Diários Sem Professor Alocado")
+
+df_sem_prof = df_final[df_final['Qtd Docentes'] == 0]
+
+if df_sem_prof.empty:
+    st.success("✅ Todos os diários listados possuem professor alocado.")
+else:
+    df_tabela_sp = df_sem_prof[colunas_presentes].copy()
+    df_tabela_sp.rename(columns={
+        'Docentes': 'Docente(s)',
+        'Quantidade de Aulas Semanal': 'Aulas Semanais'
+    }, inplace=True)
+    
+    st.dataframe(
+        df_tabela_sp,
+        width='stretch',
+        hide_index=True,
+        column_config={
+            "Quantidade de Alunos": st.column_config.NumberColumn("Qtd Alunos", format="%d"),
+            "Aulas Semanais": st.column_config.NumberColumn("Aulas Semanais", format="%.2f")
+        }
+    )
+
+# ==========================================
+# TABELA 3: SEM ALUNOS
+# ==========================================
+st.markdown("### ⚠️ Diários Sem Alunos Matriculados (0 Alunos)")
+
+df_sem_alunos = df_final[df_final['Quantidade de Alunos'] == 0]
+
+if df_sem_alunos.empty:
+    st.success("✅ Todos os diários listados possuem alunos matriculados.")
+else:
+    df_tabela_sa = df_sem_alunos[colunas_presentes].copy()
+    df_tabela_sa.rename(columns={
+        'Docentes': 'Docente(s)',
+        'Quantidade de Aulas Semanal': 'Aulas Semanais'
+    }, inplace=True)
+    
+    st.dataframe(
+        df_tabela_sa,
         width='stretch',
         hide_index=True,
         column_config={
