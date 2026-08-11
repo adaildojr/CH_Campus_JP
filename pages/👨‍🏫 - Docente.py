@@ -16,11 +16,8 @@ if "autenticado" not in st.session_state or not st.session_state["autenticado"]:
     # comente o st.stop() acima e descomente a linha abaixo (use o nome exato do seu arquivo principal):
     st.switch_page("Home.py")
 
-st.set_page_config(
-    page_title="Docente",
-    page_icon="👨‍🏫",
-    layout="wide"
-)
+# st.set_page_config não pode ser chamado duas vezes, removi a duplicação que havia no original
+# Se quiser o título como "Docente", basta alterar o primeiro lá em cima.
 
 @st.cache_data
 def carregar_dados():
@@ -111,13 +108,6 @@ lotacao = obter_info_docente('Lotação')
 #st.header("👨‍🏫 Docente")
 st.title(f"{prof_selecionado} ({matricula}) - {ano_selecionado}.{periodo_selecionado}")
 
-#st.markdown(f"<div style='text-align: right; font-size: 22px;'><b>Lotação: {campus}</b></div>",unsafe_allow_html=True)
-#st.markdown(f"<div style='text-align: right; font-size: 22px;'><b>Setor: {setor}</b></div>",unsafe_allow_html=True)
-#st.markdown(f"**Lotação: {campus}**")
-#st.markdown(f"**Setor: {setor}**")
-
-
-      
 # --- FIM DO NOVO BLOCO ---
 
 # Aplica a regra de Técnico Integrado para o semestre atual
@@ -135,8 +125,6 @@ else:
     cursos_atuacao = df_prof_semestre['Curso'].dropna().unique()
     cursos_formatados = ", ".join(sorted(cursos_atuacao))
 
-    #st.metric(f"Total de Aulas Semanais {ano_selecionado}.{periodo_selecionado}", f"{total_aulas_semestre:.2f}",delta=(total_aulas_semestre-12), border=True, width="content")
-
     col_info1, col_info2 = st.columns([.8, .15], gap="large", vertical_alignment="bottom",width="stretch")
     with col_info2:
         st.metric(f"Total de Aulas Semanais {ano_selecionado}.{periodo_selecionado}", f"{total_aulas_semestre:.2f}",delta=(total_aulas_semestre-12), border=True, width="content")
@@ -145,16 +133,14 @@ else:
         st.markdown(f"<div style='text-align: right; font-size: 22px;'><b>{campus} / Setor Atual: {setor}</b></div>",unsafe_allow_html=True)
         st.markdown(f"<div style='text-align: right; font-size: 22px;'><b>Lotação: {lotacao}</b></div>",unsafe_allow_html=True)
  
-        #st.info(f"**Curso(s) que Atua:**\n{cursos_formatados}")
         st.markdown(f"<div style='text-align: left; font-size: 22px;'><b>Curso(s) que Atua:</b></div>",unsafe_allow_html=True)
-        #st.markdown(f"<div style='text-align: center; font-size: 22px;'><b>{cursos_formatados}</b></div>",unsafe_allow_html=True)
         st.info(f"{cursos_formatados}")
       
     
     st.markdown(f"### 📋 Disciplinas {ano_selecionado}.{periodo_selecionado}")
     
-    # Prepara a tabela solicitada
-    tabela_detalhe = df_prof_semestre[['Modalidade', 'Curso', 'Componente Curricular', 'Aulas Proporcionais']].copy()
+    # Prepara a tabela solicitada INCLUINDO QUANTIDADE DE ALUNOS
+    tabela_detalhe = df_prof_semestre[['Modalidade', 'Curso', 'Componente Curricular', 'Quantidade de Alunos', 'Aulas Proporcionais']].copy()
     tabela_detalhe.rename(columns={'Aulas Proporcionais': 'Quantidade de Aula Semanal'}, inplace=True)
     
     # Adiciona a linha de total
@@ -162,6 +148,7 @@ else:
         'Modalidade': 'TOTAL', 
         'Curso': '-', 
         'Componente Curricular': '-', 
+        'Quantidade de Alunos': '-', 
         'Quantidade de Aula Semanal': total_aulas_semestre
     }])
     tabela_final = pd.concat([tabela_detalhe, linha_total], ignore_index=True)
@@ -169,12 +156,15 @@ else:
     # Exibe a tabela no Streamlit
     st.dataframe(
         tabela_final,
-       width='stretch',
+        width='stretch',
         hide_index=True,
         column_config={
             "Quantidade de Aula Semanal": st.column_config.NumberColumn(
                 "Quantidade de Aula Semanal",
                 format="%.2f"
+            ),
+            "Quantidade de Alunos": st.column_config.Column(
+                "Quantidade de Alunos"
             )
         }
     )
@@ -224,9 +214,6 @@ try:
     # Obtém o timestamp da última modificação do arquivo
     timestamp_atualizacao = os.path.getctime("Diarios_Organizados_Final.xlsx")
     
-    # Data de CRIAÇÃO do arquivo no Windows, use:
-    #timestamp_atualizacao = os.path.getctime("Diarios_Organizados_Final.xlsx")
-    
     # Converte o timestamp para uma data legível
     data_obj = datetime.fromtimestamp(timestamp_atualizacao)
     
@@ -240,4 +227,4 @@ except FileNotFoundError:
 
 
 st.sidebar.markdown("---") # Cria uma linha divisória para separar o conteúdo principal do rodapé
-st.sidebar.caption(mensagem) # Coloca a mensagem com uma fonte menor (caption) na parte de ba
+st.sidebar.caption(mensagem) # Coloca a mensagem com uma fonte menor (caption) na parte de baixo
