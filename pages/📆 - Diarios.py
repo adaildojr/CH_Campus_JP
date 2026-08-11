@@ -10,7 +10,7 @@ st.set_page_config(page_title="Identificação de Diários", page_icon="📆", l
 if "autenticado" not in st.session_state or not st.session_state["autenticado"]:
     st.warning("🔒 Acesso negado. Por favor, faça o login na página Home.")
     # st.stop() 
-    # st.switch_page("Home.py") # Descomente para forçar o redirecionamento automático
+    st.switch_page("Home.py") # Descomente para forçar o redirecionamento automático
 
 @st.cache_data
 def carregar_dados_diarios():
